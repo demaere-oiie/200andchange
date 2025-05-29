@@ -334,7 +334,7 @@ it goes.</p>
         <span class="hljs-type">uint8_t</span> *data = mmap(<span class="hljs-number">0</span>, file_stat.st_size, PROT_READ, MAP_SHARED, fd, <span class="hljs-number">0</span>);
         <span class="hljs-type">uint32_t</span> trigram = ((<span class="hljs-type">uint32_t</span>)data[<span class="hljs-number">0</span>] &lt;&lt; <span class="hljs-number">8</span>) | (<span class="hljs-type">uint32_t</span>)data[<span class="hljs-number">1</span>];
         <span class="hljs-keyword">for</span> (<span class="hljs-type">off_t</span> i = <span class="hljs-number">2</span>; i &lt; file_stat.st_size; ++i) {
-            trigram = ((trigram &lt;&lt; <span class="hljs-number">8</span>) &amp; <span class="hljs-number">0xffffff</span>ul) | data[i];
+            trigram = ((trigram &lt;&lt; <span class="hljs-number">8</span>) &amp; <span class="hljs-number">0xffffffu</span>l) | data[i];
             <span class="hljs-type">uint32_t</span> hash = pcg_output_rxs_m_xs_32_32(trigram);</pre></div></div>
             
         </li>
@@ -394,7 +394,7 @@ parameters of the Bloom filter.</p>
     <span class="hljs-keyword">if</span> (query_length &gt;= <span class="hljs-number">3</span>) {
         <span class="hljs-type">uint32_t</span> trigram = ((<span class="hljs-type">uint32_t</span>)query[<span class="hljs-number">0</span>] &lt;&lt; <span class="hljs-number">8</span>) | (<span class="hljs-type">uint32_t</span>)query[<span class="hljs-number">1</span>];
         <span class="hljs-keyword">for</span> (<span class="hljs-type">size_t</span> i = <span class="hljs-number">2</span>; i &lt; query_length; ++i) {
-            trigram = ((trigram &lt;&lt; <span class="hljs-number">8</span>) &amp; <span class="hljs-number">0xffffff</span>ul) | query[i];
+            trigram = ((trigram &lt;&lt; <span class="hljs-number">8</span>) &amp; <span class="hljs-number">0xffffffu</span>l) | query[i];
             <span class="hljs-type">uint32_t</span> hash = pcg_output_rxs_m_xs_32_32(trigram);
             <span class="hljs-keyword">for</span> (<span class="hljs-type">size_t</span> j = <span class="hljs-number">0</span>; j &lt; index.stride; ++j) {
                 query_bitmap[j] &amp;= index.bitmaps[index.stride * (hash &amp; FILTER_MASK) + j];
