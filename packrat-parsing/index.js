@@ -20,8 +20,7 @@ class Matcher {
     this.input = input;
     this.pos = 0;
     this.memoTable = [];
-    var cst =
-        new RuleApplication('start').eval(this);
+    const cst = new RuleApplication("start").eval(this);
     if (this.pos === this.input.length) {
       return cst;
     }
@@ -29,28 +28,28 @@ class Matcher {
   }
 
   hasMemoizedResult(ruleName) {
-    var col = this.memoTable[this.pos];
+    const col = this.memoTable[this.pos];
     return col && col.has(ruleName);
   }
 
   memoizeResult(pos, ruleName, cst) {
-    var col = this.memoTable[pos];
+    let col = this.memoTable[pos];
     if (!col) {
       col = this.memoTable[pos] = new Map();
     }
     if (cst !== null) {
       col.set(ruleName, {
-        cst: cst,
-        nextPos: this.pos
+        cst,
+        nextPos: this.pos,
       });
     } else {
-      col.set(ruleName, {cst: null});
+      col.set(ruleName, { cst: null });
     }
   }
 
   useMemoizedResult(ruleName) {
-    var col = this.memoTable[this.pos];
-    var result = col.get(ruleName);
+    const col = this.memoTable[this.pos];
+    const result = col.get(ruleName);
     if (result.cst !== null) {
       this.pos = result.nextPos;
       return result.cst;
@@ -73,12 +72,12 @@ class RuleApplication {
   }
 
   eval(matcher) {
-    var name = this.ruleName;
+    const name = this.ruleName;
     if (matcher.hasMemoizedResult(name)) {
       return matcher.useMemoizedResult(name);
     } else {
-      var origPos = matcher.pos;
-      var cst = matcher.rules[name].eval(matcher);
+      const origPos = matcher.pos;
+      const cst = matcher.rules[name].eval(matcher);
       matcher.memoizeResult(origPos, name, cst);
       return cst;
     }
@@ -91,7 +90,7 @@ class Terminal {
   }
 
   eval(matcher) {
-    for (var i = 0; i < this.str.length; i++) {
+    for (let i = 0; i < this.str.length; i++) {
       if (!matcher.consume(this.str[i])) {
         return null;
       }
@@ -106,10 +105,10 @@ class Choice {
   }
 
   eval(matcher) {
-    var origPos = matcher.pos;
-    for (var i = 0; i < this.exps.length; i++) {
+    const origPos = matcher.pos;
+    for (let i = 0; i < this.exps.length; i++) {
       matcher.pos = origPos;
-      var cst = this.exps[i].eval(matcher);
+      const cst = this.exps[i].eval(matcher);
       if (cst !== null) {
         return cst;
       }
@@ -124,10 +123,10 @@ class Sequence {
   }
 
   eval(matcher) {
-    var ans = [];
-    for (var i = 0; i < this.exps.length; i++) {
-      var exp = this.exps[i];
-      var cst = exp.eval(matcher);
+    const ans = [];
+    for (let i = 0; i < this.exps.length; i++) {
+      const exp = this.exps[i];
+      const cst = exp.eval(matcher);
       if (cst === null) {
         return null;
       }
@@ -145,7 +144,7 @@ class Not {
   }
 
   eval(matcher) {
-    var origPos = matcher.pos;
+    const origPos = matcher.pos;
     if (this.exp.eval(matcher) === null) {
       matcher.pos = origPos;
       return true;
@@ -160,10 +159,10 @@ class Repetition {
   }
 
   eval(matcher) {
-    var ans = [];
+    const ans = [];
     while (true) {
-      var origPos = matcher.pos;
-      var cst = this.exp.eval(matcher);
+      const origPos = matcher.pos;
+      const cst = this.exp.eval(matcher);
       if (cst === null) {
         matcher.pos = origPos;
         break;
@@ -175,4 +174,26 @@ class Repetition {
   }
 }
 
-return {Matcher, Terminal, RuleApplication, Choice, Sequence, Repetition, Not};
+// A simple test.
+const m = new Matcher({
+  start: new RuleApplication("exp"),
+  exp: new Sequence([
+    new RuleApplication("var"),
+    new Repetition(
+      new Sequence([new RuleApplication("op"), new RuleApplication("var")]),
+    ),
+  ]),
+  op: new Choice([new Terminal("+"), new Terminal("-")]),
+  var: new Choice([new Terminal("x"), new Terminal("y"), new Terminal("z")]),
+});
+
+function assertOk(val) {
+  if (val == null) {
+    throw new Error("Assertion failed");
+  }
+}
+
+assertOk(m.match("x"));
+assertOk(m.match("x-z"));
+assertOk(m.match("x+y-z"));
+assertOk(!m.match("x+y-"));
