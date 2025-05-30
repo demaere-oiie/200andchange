@@ -27,34 +27,31 @@ class Matcher {
     return null;
   }
 
+  memoTableAt(pos) {
+    let memo = this.memoTable[pos];
+    if (!memo) {
+      // Lazily initialize the memo column.
+      memo = this.memoTable[pos] = {};
+    }
+    return memo;
+  }
+
   hasMemoizedResult(ruleName) {
-    const col = this.memoTable[this.pos];
-    return col && col.has(ruleName);
+    return !!this.memoTableAt(this.pos)[ruleName];
   }
 
   memoizeResult(pos, ruleName, cst) {
-    let col = this.memoTable[pos];
-    if (!col) {
-      col = this.memoTable[pos] = new Map();
-    }
-    if (cst !== null) {
-      col.set(ruleName, {
-        cst,
-        nextPos: this.pos,
-      });
-    } else {
-      col.set(ruleName, { cst: null });
-    }
+    const result = { cst, nextPos: this.pos };
+    this.memoTableAt(pos)[ruleName] = result;
+    return result;
   }
 
   useMemoizedResult(ruleName) {
-    const col = this.memoTable[this.pos];
-    const result = col.get(ruleName);
-    if (result.cst !== null) {
-      this.pos = result.nextPos;
-      return result.cst;
-    }
-    return null;
+    const result = this.memoTableAt(this.pos)[ruleName];
+    // Unconditionally set the position. If it was a failure, `result.cst`
+    // is `null` and the assignment to `this.pos` is a noop.
+    this.pos = result.nextPos;
+    return result.cst;
   }
 
   consume(c) {
